@@ -84,7 +84,9 @@ class CLIPCaptionGRU(nn.Module):
         bos_id,
         eos_id,
         max_len=40,
-        temperature=0.0,
+        min_len=5,
+        temperature=0.8,
+        top_k=20,
     ):
         self.eval()
 
@@ -99,16 +101,28 @@ class CLIPCaptionGRU(nn.Module):
         cur = torch.tensor([[bos_id]], device=pixel_values.device)
         generated = []
 
-        for _ in range(max_len):
+        for step in range(max_len):
             emb = self.embedding(cur)
             out, hidden = self.gru(emb, hidden)
             logits = self.output(out[:, -1, :])
 
+            # Prevent the model from ending immediately.
+            if step < min_len:
+                logits[:, eos_id] = -1e9
+
             if temperature <= 0:
                 next_id = torch.argmax(logits, dim=-1)
             else:
-                probs = torch.softmax(logits / temperature, dim=-1)
-                next_id = torch.multinomial(probs, num_samples=1).squeeze(1)
+                logits = logits / temperature
+
+                if top_k is not None and top_k > 0:
+                    top_values, top_indices = torch.topk(logits, k=min(top_k, logits.size(-1)), dim=-1)
+                    probs = torch.softmax(top_values, dim=-1)
+                    sampled_pos = torch.multinomial(probs, num_samples=1)
+                    next_id = top_indices.gather(-1, sampled_pos).squeeze(1)
+                else:
+                    probs = torch.softmax(logits, dim=-1)
+                    next_id = torch.multinomial(probs, num_samples=1).squeeze(1)
 
             token_id = int(next_id.item())
 
@@ -119,6 +133,7 @@ class CLIPCaptionGRU(nn.Module):
             cur = next_id.view(1, 1)
 
         return generated
+
 
 
 class TextOnlyGRULM(nn.Module):

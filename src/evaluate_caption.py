@@ -44,7 +44,7 @@ def main():
         dataset,
         batch_size=args.batch_size,
         shuffle=False,
-        num_workers=2,
+        num_workers=0,
         collate_fn=make_clip_caption_collate_fn(
             processor=processor,
             pad_id=vocab.pad_id,

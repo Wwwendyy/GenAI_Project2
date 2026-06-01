@@ -1,0 +1,40 @@
+# Python cache
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+env/
+envs/
+visualrednote/
+*.egg-info/
+
+# macOS
+.DS_Store
+
+# Raw image dataset - do not upload images
+data/raw/
+*.jpg
+*.jpeg
+*.png
+*.webp
+
+# Large model checkpoints
+outputs/checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# HuggingFace cache
+.cache/
+huggingface/
+
+# Logs
+*.log
+*.out
+
+# Temporary files
+tmp/
+temp/
